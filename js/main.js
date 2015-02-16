@@ -13,8 +13,11 @@
   10. Mitoses                       1 - 10
   11. Class:                        (2 for benign, 4 for malignant)
 */
+	var cancerCount = 0;
+	var benignCount = 0;
 
 window.onload = function () {
+
 	var margin = {top: 30, right: 10, bottom: 10, left: 10},
 		    width = 960 - margin.left - margin.right,
 		    height = 500 - margin.top - margin.bottom;
@@ -34,7 +37,7 @@ window.onload = function () {
 	  .append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-   d3.csv("cancer.csv", function(error, cancer) {
+   d3.csv("cancer_filtered.csv", function(error, cancer) {
 
 		// Extract the list of dimensions and create a scale for each.
 		x.domain(dimensions = d3.keys(cancer[0]).filter(function(d) {
@@ -56,7 +59,15 @@ window.onload = function () {
 		.selectAll("path")
 		  .data(cancer)
 		.enter().append("path")
-		  .attr("class", function(d) { return d.Class=="4" ? "cancerous" : "benign"})
+		  .attr("class", function(d) { 
+		  	if(d.Class=="4"){
+		  		cancerCount++;
+		  		return "cancerous";
+		  	} else {
+		  		benignCount++;
+		  		return "benign";
+		  	}
+		  })
 		  .attr("d", path);
 
 		// Add a group element for each dimension.
@@ -130,12 +141,14 @@ window.onload = function () {
 
 		// Handles a brush event, toggling the display of foreground lines.
 		function brush() {
-		var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
-		  extents = actives.map(function(p) { return y[p].brush.extent(); });
-		foreground.style("display", function(d) {
-		return actives.every(function(p, i) {
-		  return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-		}) ? null : "none";
+			benignCount = 0;
+			cancerCount = 0;
+			var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
+			  extents = actives.map(function(p) { return y[p].brush.extent(); });
+			foreground.style("display", function(d) {
+			return actives.every(function(p, i) {
+			  return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+			}) ? null : "none";
 		});
 	}
 
