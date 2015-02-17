@@ -2,6 +2,7 @@
 <html>
 		<title>Tables of Numbers</title>
 		<script src="./libraries/d3min.js" charset="utf-8"></script>
+		<script src="./js/processData.js"></script>
 		<script src="./js/Main.js"></script>
 		<style>
 			svg {
@@ -16,19 +17,16 @@
 			}
 
 			path.benign {
-			  fill: none;
 			  stroke: steelblue;
-  			  shape-rendering: crispEdges;
-			  opacity: 0.3;
-			  stroke-width:1.5;
 			}
 
 			path.cancerous {
-			  fill: none;
 			  stroke: lightcoral;
+			}
+
+			path {
   			  shape-rendering: crispEdges;
-			  opacity: 0.3;
-  			  stroke-width:1.5;
+			  fill: none;
 			}
 
 			.brush .extent {

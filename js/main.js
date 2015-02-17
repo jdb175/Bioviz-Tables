@@ -24,7 +24,7 @@ window.onload = function () {
 
 	var margin = {top: 30, right: 10, bottom: 10, left: 10},
 			barWidth = 100,
-		    width = 960 - barWidth - margin.left - margin.right,
+		    width = 1060 - barWidth - margin.left - margin.right,
 		    height = 500 - margin.top - margin.bottom;
 
 	var x = d3.scale.ordinal().rangePoints([0, width], 1),
@@ -47,10 +47,11 @@ window.onload = function () {
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
    d3.csv("cancer_full.csv", function(error, cancer) {
+   		cancer = processData(cancer);
 
 		// Extract the list of dimensions and create a scale for each.
 		x.domain(dimensions = d3.keys(cancer[0]).filter(function(d) {
-		return d != "Sample code number" && d != "Class" && (y[d] = d3.scale.linear()
+		return d != "Sample code number" && d != "Class" && d != "weight" && (y[d] = d3.scale.linear()
 		    .domain(d3.extent(cancer, function(p) { return +p[d]; }))
 		    .range([height, 0]));
 		}));
@@ -71,12 +72,18 @@ window.onload = function () {
 		.enter().append("path")
 		  .attr("class", function(d) { 
 		  	if(d.Class=="4"){
-		  		cancerCount++;
+		  		cancerCount+=d.weight;
 		  		return "cancerous";
 		  	} else {
-		  		benignCount++;
+		  		benignCount+=d.weight;
 		  		return "benign";
 		  	}
+		  })
+		  .attr("stroke-opacity", function(d) {
+		  	return 0.3 + 0.7*d.weight/maxWeight;
+		  })
+		  .attr("stroke-width", function(d) {
+		  	return 1.2 + 0.5*d.weight/maxWeight;
 		  })
 		  .attr("d", path);
 		  totalCancerCount = cancerCount;
@@ -167,9 +174,9 @@ window.onload = function () {
 				})
 				if(shown) {
 					if(d.Class=="4") {
-						cancerCount++;
+						cancerCount+=d.weight;
 					} else {
-						benignCount++;
+						benignCount+=d.weight;
 					}
 					return null;
 				} else {
@@ -183,7 +190,7 @@ window.onload = function () {
 		function drawBars() {
 			var total = totalCancerCount + totalBenignCount;
 			var data = [(totalCancerCount-cancerCount), cancerCount, benignCount, (totalBenignCount-benignCount)];
-			var cScale = color = d3.scale.ordinal().range(["#EDD1D1", "#F08080", "#4682B4", "#8FA1B0"]).domain([0,1,2,3]);
+			var cScale = color = d3.scale.ordinal().range(["#EDE1E1", "#F08080", "#4682B4", "#A5ABB0"]).domain([0,1,2,3]);
 			var bound = barG.selectAll("rect")
 				.data(data)
 			bound.enter()
