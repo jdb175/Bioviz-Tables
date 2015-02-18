@@ -23,9 +23,11 @@ var barG;
 window.onload = function () {
 
 	var margin = {top: 30, right: 10, bottom: 10, left: 10},
-			barWidth = 100,
-		    width = 1060 - barWidth - margin.left - margin.right,
-		    height = 500 - margin.top - margin.bottom;
+			barMargin = 10,
+			barWidth = 120 - 2*barMargin,
+		    width = 1060 - barWidth -barMargin*2- margin.left - margin.right,
+		    height = 500 - margin.top - margin.bottom,
+			barHeight = height-2*barMargin;
 
 	var x = d3.scale.ordinal().rangePoints([0, width], 1),
 	    y = {},
@@ -42,6 +44,20 @@ window.onload = function () {
 
 	barG = svg.append("g")
 		.attr("transform", "translate(" + (margin.left+width) + "," + margin.top + ")");
+
+	barG.append("text")
+		.attr("x", barWidth/2)
+		.attr("y", 3)
+		.style("text-anchor", "middle")
+		.text("Cancerous Cells");
+
+	barG.append("text")
+		.attr("x", barWidth/2)
+		.attr("y", barMargin+ barHeight+15)
+		.style("text-anchor", "middle")
+		.text("Benign Cells");
+
+	barG = barG.append("g");
 
 	svg = svg.append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -206,11 +222,11 @@ window.onload = function () {
 					if(total == 0) { 
 						return 0 
 					} else { 
-						return height * (d.max-d.min)/total 
+						return barHeight * (d.max-d.min)/total 
 					}
 				})
 				.attr("y", function(d,i) {
-					return d.min*height/total;
+					return d.min*barHeight/total + barMargin;
 				})
 				.attr("fill", function(d,i) { return cScale(i)});
 
@@ -225,9 +241,9 @@ window.onload = function () {
 				.transition()
 				.attr("y", function(d) { 
 					if(d.y <= totalCancerCount) { 
-						return Math.min(totalCancerCount*height/total-5, d.y*height/total + 10);
+						return Math.min(totalCancerCount*barHeight/total-5, d.y*barHeight/total + 10) + barMargin;
 					} else { 
-						return Math.max(totalCancerCount*height/total+10, d.y*height/total - 4);
+						return Math.max(totalCancerCount*barHeight/total+10, d.y*barHeight/total - 4) + barMargin;
 					}
 				})
 		}
