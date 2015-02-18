@@ -46,7 +46,7 @@ window.onload = function () {
 	svg = svg.append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-   d3.csv("cancer_full.csv", function(error, cancer) {
+	d3.csv("cancer_full.csv", function(error, cancer) {
    		cancer = processData(cancer);
 
 		// Extract the list of dimensions and create a scale for each.
@@ -80,10 +80,10 @@ window.onload = function () {
 		  	}
 		  })
 		  .attr("stroke-opacity", function(d) {
-		  	return 0.3 + 0.7*d.weight/maxWeight;
+		  	return 0.15 + 0.85*Math.pow(d.weight/maxWeight, 2);
 		  })
 		  .attr("stroke-width", function(d) {
-		  	return 1.2 + 0.5*d.weight/maxWeight;
+		  	return 1.2 + 3.8*Math.pow(d.weight/maxWeight, 3);
 		  })
 		  .attr("d", path);
 		  totalCancerCount = cancerCount;
@@ -166,6 +166,7 @@ window.onload = function () {
 		function brush() {
 			benignCount = 0;
 			cancerCount = 0;
+
 			var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
 			  extents = actives.map(function(p) { return y[p].brush.extent(); });
 			foreground.style("display", function(d) {
@@ -189,28 +190,46 @@ window.onload = function () {
 		//Draws the side bar chart
 		function drawBars() {
 			var total = totalCancerCount + totalBenignCount;
-			var data = [(totalCancerCount-cancerCount), cancerCount, benignCount, (totalBenignCount-benignCount)];
-			var cScale = color = d3.scale.ordinal().range(["#EDE1E1", "#F08080", "#4682B4", "#A5ABB0"]).domain([0,1,2,3]);
+			var data = [{ min: 0, max: (totalCancerCount-cancerCount)}, 
+						{ min: (totalCancerCount-cancerCount), max: totalCancerCount }, 
+						{ min: totalCancerCount, max: totalCancerCount+benignCount }, 
+						{ min: totalCancerCount+benignCount, max: total}];
+
+			var textData = [{y: totalCancerCount-cancerCount, val: cancerCount }, {y: totalCancerCount+benignCount, val: benignCount}]
+			var cScale = color = d3.scale.ordinal().range(["#dfb9b9", "#F08080", "#4682B4", "#b1c1cd"]).domain([0,1,2,3]);
 			var bound = barG.selectAll("rect")
 				.data(data)
 			bound.enter()
 				.append("rect")
-				.attr("width", width)
+				.attr("width", barWidth)
 			bound.transition().attr("height", function(d) { 
 					if(total == 0) { 
 						return 0 
 					} else { 
-						return height * d/total 
+						return height * (d.max-d.min)/total 
 					}
 				})
 				.attr("y", function(d,i) {
-					var y = 0;
-					for(var j = i-1; j >=0 ; --j){
-						y += data[j] * height/total;
-					}
-					return y;
+					return d.min*height/total;
 				})
 				.attr("fill", function(d,i) { return cScale(i)});
+
+			var text = barG.selectAll("text")
+				.data(textData, function(d , i) {return i;})
+			text.enter()
+				.append("text")
+				.attr("class", "numberlabel")
+				.style("text-anchor", "middle")
+				.attr("x", (barWidth/2))
+			text.text(function(d) { if(d.val > 0) { return d.val}  else { return ""; } })
+				.transition()
+				.attr("y", function(d) { 
+					if(d.y <= totalCancerCount) { 
+						return Math.min(totalCancerCount*height/total-5, d.y*height/total + 10);
+					} else { 
+						return Math.max(totalCancerCount*height/total+10, d.y*height/total - 4);
+					}
+				})
 		}
 
 }
