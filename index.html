@@ -6,14 +6,20 @@
 		<script src="./js/Main.js"></script>
 		<style>
 			svg {
-			  font: 10px sans-serif;
+				-webkit-user-select:none;
+				-khtml-user-select:none;
+				-moz-user-select:none;
+				-ms-user-select:none;
+				-o-user-select:none;
+				user-select:none;
+				font: 10px sans-serif;
 			}
 
 			.background path {
 			  fill: none;
 			  stroke: #ddd;
 			  shape-rendering: crispEdges;
-  			  opacity: 0.1;
+  			  opacity: 0.05;
 			}
 
 			path.benign {
@@ -59,10 +65,15 @@
 				float: right;
 			}
 
+			body {
+				font: 12px sans-serif;
+			}
+
 			</style>
 </head>
 	<body bgcolor="#fdfcf9">
 		<div id = centerer>
+			<h1 align="center">Breast Cancer Parallel Coordinates</h1>
 			<svg/>
 			<br/>
 			<div id="showall" style="visibility:hidden"><span id="showtext">Cancerous cells hidden</span> <button onclick="showClass(null)">Show</button></div>

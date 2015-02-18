@@ -49,12 +49,16 @@ window.onload = function () {
 		.attr("x", barWidth/2)
 		.attr("y", 3)
 		.style("text-anchor", "middle")
+		.style("fill", "lightcoral")
+		.style("font-weight", "bold")
 		.text("Cancerous Cells");
 
 	barG.append("text")
 		.attr("x", barWidth/2)
 		.attr("y", barMargin+ barHeight+15)
 		.style("text-anchor", "middle")
+		.style("fill", "steelblue")
+		.style("font-weight", "bold")
 		.text("Benign Cells");
 
 	barG = barG.append("g");
@@ -96,7 +100,7 @@ window.onload = function () {
 		  	}
 		  })
 		  .attr("stroke-opacity", function(d) {
-		  	return 0.15 + 0.85*Math.pow(d.weight/maxWeight, 2);
+		  	return 0.3 + 0.7*Math.pow(d.weight/maxWeight, 2);
 		  })
 		  .attr("stroke-width", function(d) {
 		  	return 1.2 + 3.8*Math.pow(d.weight/maxWeight, 3);
