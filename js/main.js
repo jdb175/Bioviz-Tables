@@ -19,9 +19,7 @@ var totalCancerCount;
 var totalBenignCount;
 var svg;
 var barG;
-
-window.onload = function () {
-	var curClass = null;
+var curClass = null;
 
 	var margin = {top: 30, right: 10, bottom: 10, left: 10},
 			barMargin = 10,
@@ -39,7 +37,8 @@ window.onload = function () {
 	    background,
 	    foreground;
 
-	svg = d3.select("body").append("svg")
+window.onload = function () {
+	svg = d3.select("svg")
 	    .attr("width", width + barWidth + margin.left + margin.right)
 	    .attr("height", height + margin.top + margin.bottom);
 
@@ -160,103 +159,104 @@ window.onload = function () {
 			drawBars();
 
 		});
+}
+function position(d) {
+	var v = dragging[d];
+	return v == null ? x(d) : v;
+}
 
-		function position(d) {
-			var v = dragging[d];
-			return v == null ? x(d) : v;
-		}
+function transition(g) {
+	return g.transition().duration(500);
+}
 
-		function transition(g) {
-			return g.transition().duration(500);
-		}
+// Returns the path for a given data point.
+function path(d) {
+	return line(dimensions.map(function(p) { return [position(p), y[p](d[p])]; }));
+}
 
-		// Returns the path for a given data point.
-		function path(d) {
-			return line(dimensions.map(function(p) { return [position(p), y[p](d[p])]; }));
-		}
+function brushstart() {
+	d3.event.sourceEvent.stopPropagation();
+}
 
-		function brushstart() {
-			d3.event.sourceEvent.stopPropagation();
-		}
+//Toggles showing a specific class of cells
+function showClass(Class) {
+	if(curClass == Class || Class == null) {
+		curClass = null;
+		document.getElementById("showall").style.visibility = "hidden";
+	} else {
+		curClass = Class;
+		document.getElementById("showall").style.visibility = "visible";
+		document.getElementById("showtext").innerHTML = (Class == "4" ? "Benign" : "Cancerous") + " cells hidden";
+	}
+	filter();
+}
 
-		//Toggles showing a specific class of cells
-		function showClass(Class) {
-			if(curClass == Class) {
-				curClass = null;
+//Handles showing and hiding of lines
+function filter() {
+	benignCount = 0;
+	cancerCount = 0;
+	var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
+	  extents = actives.map(function(p) { return y[p].brush.extent(); });
+	foreground.style("display", function(d) {
+		var shown = actives.every(function(p, i) {
+			return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+		}) && (curClass == null || d.Class == curClass);
+		if(shown) {
+			if(d.Class=="4") {
+				cancerCount+=d.weight;
 			} else {
-				curClass = Class;
+				benignCount+=d.weight;
 			}
-			filter();
+			return null;
+		} else {
+			return "none";
 		}
+	});
+	drawBars();
+}
 
-		//Handles showing and hiding of lines
-		function filter() {
-			benignCount = 0;
-			cancerCount = 0;
-			var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
-			  extents = actives.map(function(p) { return y[p].brush.extent(); });
-			foreground.style("display", function(d) {
-				var shown = actives.every(function(p, i) {
-					return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-				}) && (curClass == null || d.Class == curClass);
-				if(shown) {
-					if(d.Class=="4") {
-						cancerCount+=d.weight;
-					} else {
-						benignCount+=d.weight;
-					}
-					return null;
-				} else {
-					return "none";
-				}
-			});
-			drawBars();
-		}
+//Draws the side bar chart
+function drawBars() {
+	var total = totalCancerCount + totalBenignCount;
+	var data = [{ min: 0, max: totalCancerCount-cancerCount, Class:"4" }, 
+				{ min: totalCancerCount-cancerCount, max: totalCancerCount, Class:"4" }, 
+				{ min: totalCancerCount, max: totalCancerCount+benignCount, Class:"2" }, 
+				{ min: totalCancerCount+benignCount, max: total, Class:"2" }];
 
-		//Draws the side bar chart
-		function drawBars() {
-			var total = totalCancerCount + totalBenignCount;
-			var data = [{ min: 0, max: totalCancerCount-cancerCount, Class:"4" }, 
-						{ min: totalCancerCount-cancerCount, max: totalCancerCount, Class:"4" }, 
-						{ min: totalCancerCount, max: totalCancerCount+benignCount, Class:"2" }, 
-						{ min: totalCancerCount+benignCount, max: total, Class:"2" }];
+	var textData = [{y: totalCancerCount-cancerCount, val: cancerCount }, {y: totalCancerCount+benignCount, val: benignCount}]
+	var cScale = color = d3.scale.ordinal().range(["#dfb9b9", "#F08080", "#4682B4", "#b1c1cd"]).domain([0,1,2,3]);
+	var bound = barG.selectAll("rect")
+		.data(data)
+	bound.enter()
+		.append("rect")
+		.attr("width", barWidth)
+		.on("click", function(d) { showClass(d.Class); });
+	bound.transition().attr("height", function(d) { 
+			if(total == 0) { 
+				return 0 
+			} else { 
+				return barHeight * (d.max-d.min)/total 
+			}
+		})
+		.attr("y", function(d,i) {
+			return d.min*barHeight/total + barMargin;
+		})
+		.attr("fill", function(d,i) { return cScale(i)})
 
-			var textData = [{y: totalCancerCount-cancerCount, val: cancerCount }, {y: totalCancerCount+benignCount, val: benignCount}]
-			var cScale = color = d3.scale.ordinal().range(["#dfb9b9", "#F08080", "#4682B4", "#b1c1cd"]).domain([0,1,2,3]);
-			var bound = barG.selectAll("rect")
-				.data(data)
-			bound.enter()
-				.append("rect")
-				.attr("width", barWidth)
-				.on("click", function(d) { showClass(d.Class); });
-			bound.transition().attr("height", function(d) { 
-					if(total == 0) { 
-						return 0 
-					} else { 
-						return barHeight * (d.max-d.min)/total 
-					}
-				})
-				.attr("y", function(d,i) {
-					return d.min*barHeight/total + barMargin;
-				})
-				.attr("fill", function(d,i) { return cScale(i)})
-
-			var text = barG.selectAll("text")
-				.data(textData, function(d , i) {return i;})
-			text.enter()
-				.append("text")
-				.attr("class", "numberlabel")
-				.style("text-anchor", "middle")
-				.attr("x", (barWidth/2))
-			text.text(function(d) { if(d.val > 0) { return d.val}  else { return ""; } })
-				.transition()
-				.attr("y", function(d) { 
-					if(d.y <= totalCancerCount) { 
-						return Math.min(totalCancerCount*barHeight/total-5, d.y*barHeight/total + 10) + barMargin;
-					} else { 
-						return Math.max(totalCancerCount*barHeight/total+10, d.y*barHeight/total - 4) + barMargin;
-					}
-				})
-		}
-
+	var text = barG.selectAll("text")
+		.data(textData, function(d , i) {return i;})
+	text.enter()
+		.append("text")
+		.attr("class", "numberlabel")
+		.style("text-anchor", "middle")
+		.attr("x", (barWidth/2))
+	text.text(function(d) { if(d.val > 0) { return d.val}  else { return ""; } })
+		.transition()
+		.attr("y", function(d) { 
+			if(d.y <= totalCancerCount) { 
+				return Math.min(totalCancerCount*barHeight/total-5, d.y*barHeight/total + 10) + barMargin;
+			} else { 
+				return Math.max(totalCancerCount*barHeight/total+10, d.y*barHeight/total - 4) + barMargin;
+			}
+		})
 }
