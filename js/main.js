@@ -21,6 +21,7 @@ var svg;
 var barG;
 
 window.onload = function () {
+	var curClass = null;
 
 	var margin = {top: 30, right: 10, bottom: 10, left: 10},
 			barMargin = 10,
@@ -149,7 +150,7 @@ window.onload = function () {
 			g.append("g")
 			  .attr("class", "brush")
 			  .each(function(d) {
-			    d3.select(this).call(y[d].brush = d3.svg.brush().y(y[d]).on("brushstart", brushstart).on("brush", brush));
+			    d3.select(this).call(y[d].brush = d3.svg.brush().y(y[d]).on("brushstart", brushstart).on("brush", filter));
 			  })
 			.selectAll("rect")
 			  .attr("x", -8)
@@ -178,17 +179,26 @@ window.onload = function () {
 			d3.event.sourceEvent.stopPropagation();
 		}
 
-		// Handles a brush event, toggling the display of foreground lines.
-		function brush() {
+		//Toggles showing a specific class of cells
+		function showClass(Class) {
+			if(curClass == Class) {
+				curClass = null;
+			} else {
+				curClass = Class;
+			}
+			filter();
+		}
+
+		//Handles showing and hiding of lines
+		function filter() {
 			benignCount = 0;
 			cancerCount = 0;
-
 			var actives = dimensions.filter(function(p) { return !y[p].brush.empty(); }),
 			  extents = actives.map(function(p) { return y[p].brush.extent(); });
 			foreground.style("display", function(d) {
 				var shown = actives.every(function(p, i) {
 					return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-				})
+				}) && (curClass == null || d.Class == curClass);
 				if(shown) {
 					if(d.Class=="4") {
 						cancerCount+=d.weight;
@@ -206,10 +216,10 @@ window.onload = function () {
 		//Draws the side bar chart
 		function drawBars() {
 			var total = totalCancerCount + totalBenignCount;
-			var data = [{ min: 0, max: (totalCancerCount-cancerCount)}, 
-						{ min: (totalCancerCount-cancerCount), max: totalCancerCount }, 
-						{ min: totalCancerCount, max: totalCancerCount+benignCount }, 
-						{ min: totalCancerCount+benignCount, max: total}];
+			var data = [{ min: 0, max: totalCancerCount-cancerCount, Class:"4" }, 
+						{ min: totalCancerCount-cancerCount, max: totalCancerCount, Class:"4" }, 
+						{ min: totalCancerCount, max: totalCancerCount+benignCount, Class:"2" }, 
+						{ min: totalCancerCount+benignCount, max: total, Class:"2" }];
 
 			var textData = [{y: totalCancerCount-cancerCount, val: cancerCount }, {y: totalCancerCount+benignCount, val: benignCount}]
 			var cScale = color = d3.scale.ordinal().range(["#dfb9b9", "#F08080", "#4682B4", "#b1c1cd"]).domain([0,1,2,3]);
@@ -218,6 +228,7 @@ window.onload = function () {
 			bound.enter()
 				.append("rect")
 				.attr("width", barWidth)
+				.on("click", function(d) { showClass(d.Class); });
 			bound.transition().attr("height", function(d) { 
 					if(total == 0) { 
 						return 0 
@@ -228,7 +239,7 @@ window.onload = function () {
 				.attr("y", function(d,i) {
 					return d.min*barHeight/total + barMargin;
 				})
-				.attr("fill", function(d,i) { return cScale(i)});
+				.attr("fill", function(d,i) { return cScale(i)})
 
 			var text = barG.selectAll("text")
 				.data(textData, function(d , i) {return i;})
