@@ -29,4 +29,4 @@ This visualization could support any set of records in this type, performance pe
 * Tools for exploring the relationship between cell characteristics in breast tissue samples and presence of cancer. 
 
 #####Running It
-This must be run from a server, so start a server in the top-level folder of the assignment, and then visit it in your browser.
+This must be run from a server, so start a server in the top-level folder of the assignment, and then visit it in your browser (preferably chrome, Safari has some issues with it). You can also see it live at http://jdb175.github.io/Bioviz-Tables/
